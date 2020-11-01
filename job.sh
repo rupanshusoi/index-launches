@@ -7,4 +7,4 @@
 #SBATCH --partition=normal
 #SBATCH --constraint=gpu
 
-srun ./src/empty.out
+srun -v -C gpu ./src/empty.out
