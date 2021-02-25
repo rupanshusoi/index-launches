@@ -6,5 +6,6 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --partition=normal
 #SBATCH --constraint=gpu
+#SBATCH -A d108
 
-srun -v -C gpu ./src/empty.out
+srun -v -C gpu $1
