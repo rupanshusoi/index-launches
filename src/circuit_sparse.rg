@@ -401,9 +401,11 @@ where
         rw.{in_ptr, out_ptr, inductance, resistance, wire_cap}),
   reads writes(rw.{current, voltage})
 do
+  --[[
   if print_ts then
     format.println("t: {}", c.legion_get_current_time_in_micros())
   end
+  --]]
   var dt : float = DELTAT
   var recip_dt : float = 1.0 / dt
   --__demand(__vectorize)
@@ -522,9 +524,11 @@ do
     node.node_voltage = voltage
     node.charge = 0.0
   end
+  --[[
   if print_ts then
     format.println("t: {}", c.legion_get_current_time_in_micros())
   end
+  --]]
 end
 
 if not use_python_main then
@@ -616,13 +620,18 @@ do
   return partition(aliased, all_shared, ghost_node_map, ghost_ranges.ispace)
 end
 
+task printCheck()
+  format.println("\n\n*****THIS SHOULD ONLY BE PRINTED ONCE.*****\n")
+end
+
+__demand(__replicable)
 task toplevel()
   var conf : Config
   conf.num_loops = 5
   conf.num_pieces = 4
   conf.pieces_per_superpiece = 1
-  conf.nodes_per_piece = 4
-  conf.wires_per_piece = 8
+  conf.nodes_per_piece = 4 * 10000
+  conf.wires_per_piece = 8 * 10000
   conf.pct_wire_in_piece = 80
   conf.random_seed = 12345
   conf.steps = STEPS
@@ -635,11 +644,14 @@ task toplevel()
   conf.num_neighbors = 5 -- set 0 if density parameter is to be picked
   conf.window = 3 -- find neighbors among [piece_id - window, piece_id + window]
 
-  conf = parse_input_args(conf)
+  --conf = parse_input_args(conf)
   regentlib.assert(conf.num_pieces % conf.pieces_per_superpiece == 0,
       "pieces should be evenly distributed to superpieces")
   conf.shared_nodes_per_piece =
     [int](ceil(conf.nodes_per_piece * conf.pct_shared_nodes / 100.0))
+
+  printCheck()
+
   format.println("circuit settings: loops={} prune={} pieces={} (pieces/superpiece={}) nodes/piece={} (nodes/piece={}) wires/piece={} pct_in_piece={} seed={}",
     conf.num_loops, conf.prune, conf.num_pieces, conf.pieces_per_superpiece, conf.nodes_per_piece,
     conf.shared_nodes_per_piece, conf.wires_per_piece, conf.pct_wire_in_piece, conf.random_seed)
@@ -688,6 +700,7 @@ task toplevel()
 
   __demand(__spmd)
   for j = 0, 1 do
+    __demand(__index_launch)
     for i = 0, num_superpieces do
       init_pointers(rp_private[i], rp_shared[i], rp_ghost[i], rp_wires[i])
     end
@@ -764,7 +777,8 @@ if os.getenv('SAVEOBJ') == '1' then
         regentlib.binding_library .. ' ' .. out_dir)
   end
 
-  local exe = os.getenv('OBJNAME') or "circuit"
+  --local exe = os.getenv('OBJNAME') or "circuit"
+  local exe = "out"
   regentlib.saveobj(toplevel, exe, "executable", cmapper.register_mappers, link_flags)
 else
   regentlib.start(toplevel, cmapper.register_mappers)
