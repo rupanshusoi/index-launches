@@ -627,16 +627,16 @@ end
 __demand(__replicable)
 task toplevel()
   var conf : Config
-  conf.num_loops = 5
-  conf.num_pieces = 4
-  conf.pieces_per_superpiece = 1
-  conf.nodes_per_piece = 4 * 10000
-  conf.wires_per_piece = 8 * 10000
+  conf.num_loops = 5 -- * 10
+  conf.num_pieces = 2 * 10
+  conf.pieces_per_superpiece = 10
+  conf.nodes_per_piece = 5000
+  conf.wires_per_piece = 20000
   conf.pct_wire_in_piece = 80
   conf.random_seed = 12345
   conf.steps = STEPS
   conf.sync = 0
-  conf.prune = 0
+  conf.prune = 30
   conf.perform_checks = false
   conf.dump_values = false
   conf.pct_shared_nodes = 1.0
