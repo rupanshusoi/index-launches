@@ -767,12 +767,15 @@ task toplevel()
   var ts_end = ts_start
   __demand(__spmd, __trace)
   for j = 0, num_loops do
+    __demand(__index_launch)
     for i = 0, num_superpieces do
       calculate_new_currents(j == prune, steps, rp_private[i], rp_shared[i], rp_ghost[i], rp_wires[i], rp_times[i])
     end
+    __demand(__index_launch)
     for i = 0, num_superpieces do
       distribute_charge(rp_private[i], rp_shared[i], rp_ghost[i], rp_wires[i])
     end
+    __demand(__index_launch)
     for i = 0, num_superpieces do
       update_voltages(j == num_loops - prune - 1, rp_private[i], rp_shared[i], rp_times[i])
     end
@@ -796,10 +799,10 @@ if os.getenv('SAVEOBJ') == '1' then
 
   if os.getenv('STANDALONE') == '1' then
     os.execute('cp ' .. os.getenv('LG_RT_DIR') .. '/../bindings/regent/' ..
-        regentlib.binding_library .. ' ' .. out_dir)
+        'regentlib.so' .. ' ' .. out_dir)
   end
 
-  local exe = os.getenv('OBJNAME') or "circuit"
+  local exe = os.getenv('OBJNAME') or "circuit.dcr_no_idx"
   regentlib.saveobj(toplevel, exe, "executable", cmapper.register_mappers, link_flags)
 else
   regentlib.start(toplevel, cmapper.register_mappers)
