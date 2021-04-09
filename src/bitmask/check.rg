@@ -6,10 +6,7 @@ local pow = regentlib.pow(double)
 local colors = 1e3
  
 __demand(__inline)
-task expr(i : int64) return 1 end
---task expr(i : int64) return i end
---task expr(i : int64) return i%3 end
---task expr(i : int64) return i%3 end
+task expr(i : int64) return i end
  
 __demand(__inline)
 task check()
@@ -31,8 +28,7 @@ end
 task main()
   var itime = C.legion_get_current_time_in_micros()
   check()
-  __fence(__execution, __block)
   var ftime = C.legion_get_current_time_in_micros()
-  C.printf("%lld\n", ftime - itime)
+  C.printf("Time (in us): %lld\n", ftime - itime)
 end
 regentlib.start(main)
